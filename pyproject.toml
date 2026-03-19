@@ -1,0 +1,17 @@
+[project]
+name = "pytorch-llms"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "torch==2.8.0+cu129",
+]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu129"
+explicit = true  # Tells uv to only look here for torch if specified
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
