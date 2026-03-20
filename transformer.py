@@ -468,7 +468,7 @@ class MultiHeadAttention(nn.Module):
     Shape: (2, 4, 8) = (batch, seq_len, d_model)
     
     """
-    def __init__(self, d_model, num_heads):
+    def __init__(self, d_model: int, num_heads: int) -> None:
         super().__init__()
         assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
         self.num_heads = num_heads
@@ -555,7 +555,7 @@ class MultiHeadAttention(nn.Module):
     
 
 class FeedForwardSubLayer(nn.Module):
-    def __init__(self, d_model, d_ff):
+    def __init__(self, d_model: int, d_ff: int) -> None:
         super().__init__()
         self.fc1 = nn.Linear(d_model, d_ff)
         self.fc2 = nn.Linear(d_ff, d_model)
@@ -566,7 +566,7 @@ class FeedForwardSubLayer(nn.Module):
     
 
 class EncoderLayer(nn.Module):
-    def __init__(self, d_model, num_heads, d_ff, dropout):
+    def __init__(self, d_model: int, num_heads: int, d_ff: int, dropout: int) -> None:
         super().__init__()
         self.self_attn = MultiHeadAttention(d_model, num_heads)
         self.ff_sublayer = FeedForwardSubLayer(d_model, d_ff)
@@ -586,3 +586,21 @@ class EncoderLayer(nn.Module):
 
         return x
 
+
+class TransformerEncoder(nn.Module):
+    def __init__(self, vocab_size: int, d_model: int, num_layers: int, num_heads: int, 
+                 d_ff: int, dropout: int, max_seq_length: int) -> None:
+        super().__init__()
+        self.embedding = InputEmbeddings(vocab_size, d_model)
+        self.positional_encoding = PositionalEncoding(d_model, max_seq_length)
+        self.layers = nn.ModuleList(
+            [EncoderLayer(d_model, num_heads, d_ff, dropout) for _ in range(num_layers)]
+        )
+
+    def forward(self, x, src_mask):
+        x = self.embedding(x)
+        x = self.positional_encoding(x)
+        
+        for layer in self.layers:
+            x = layer(x, src_mask)
+        return x
