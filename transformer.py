@@ -167,11 +167,11 @@ class PositionalEncoding(nn.Module):
 
         # (4) broadcast to fill
 
-        # position:  (max_seq_len, 1)     e.g., (5000, 1)
+        # position:  (max_seq_length, 1)     e.g., (5000, 1)
         # div_term:  (d_model/2,)         e.g., (256,)
 
         # position * div_term broadcasts to:
-        #            (max_seq_len, d_model/2)  e.g., (5000, 256)
+        #            (max_seq_length, d_model/2)  e.g., (5000, 256)
         #         pe[:, 0::2] = torch.sin(position * div_term)
         #         pe[:, 1::2] = torch.cos(position * div_term)
 
@@ -183,7 +183,7 @@ class PositionalEncoding(nn.Module):
 
     def forward(self, x):
         # x shape: (batch_size, seq_len, d_model)
-        # pe shape: (1, max_seq_len, d_model)
+        # pe shape: (1, max_seq_length, d_model)
 
         # slice to match seq length -> (1, seq_len, d_model)
         # addition broadcast over batch dim - each seq gets same pos enc
@@ -654,6 +654,41 @@ class TransformerDecoder(nn.Module):
 
         return F.log_softmax(x, dim=-1)
 
+
+class Transformer(nn.Module):
+    def __init__(self, src_vocab_size: int, tgt_vocab_size: int, d_model: int, 
+                 num_heads: int, num_layers: int, d_ff: int, 
+                 max_seq_length: int, dropout: float) -> None:
+        super().__init__()
+
+        # encoder: processes source language
+        self.encoder = TransformerEncoder(src_vocab_size, d_model, num_layers, 
+                                           num_heads, d_ff, dropout, max_seq_length)
+        
+        # decoder: processes target language
+        self.decoder = TransformerDecoder(tgt_vocab_size, d_model, num_layers, 
+                                           num_heads, d_ff, dropout, max_seq_length)
+        
+    def forward(self, src, tgt, src_mask, tgt_mask):
+        """
+        Args:
+            src: Source token IDs (batch, src_seq_len)
+            tgt: Target token IDs (batch, tgt_seq_len)
+            src_mask: Mask for source padding (batch, 1, 1, src_seq_len)
+            tgt_mask: Causal mask + target padding (batch, 1, tgt_seq_len, tgt_seq_len)
+        
+        Returns:
+            Log probabilities over target vocabulary (batch, tgt_seq_len, tgt_vocab_size)
+        """
+        # encode source
+        encoder_output = self.encoder(src, src_mask)
+        
+        # decode target using encoder output
+        decoder_output = self.decoder(tgt, encoder_output, tgt_mask, src_mask)
+        
+        return decoder_output
+
+
 class ClassifierHead(nn.Module):
     def __init__(self, d_model: int, num_classes: int):
         super().__init__()
@@ -662,7 +697,8 @@ class ClassifierHead(nn.Module):
     def forward(self, x):
         logits = self.fc(x)
         return F.log_softmax(logits, dim=-1)
-    
+
+
 class RegressionHead(nn.Module):
     def __init__(self, d_model: int, output_dim: int):
         super().__init__()
