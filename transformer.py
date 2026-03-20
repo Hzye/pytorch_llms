@@ -566,7 +566,7 @@ class FeedForwardSubLayer(nn.Module):
     
 
 class EncoderLayer(nn.Module):
-    def __init__(self, d_model: int, num_heads: int, d_ff: int, dropout: int) -> None:
+    def __init__(self, d_model: int, num_heads: int, d_ff: int, dropout: float) -> None:
         super().__init__()
         self.self_attn = MultiHeadAttention(d_model, num_heads)
         self.ff_sublayer = FeedForwardSubLayer(d_model, d_ff)
@@ -589,7 +589,7 @@ class EncoderLayer(nn.Module):
 
 class TransformerEncoder(nn.Module):
     def __init__(self, vocab_size: int, d_model: int, num_layers: int, num_heads: int, 
-                 d_ff: int, dropout: int, max_seq_length: int) -> None:
+                 d_ff: int, dropout: float, max_seq_length: int) -> None:
         super().__init__()
         self.embedding = InputEmbeddings(vocab_size, d_model)
         self.positional_encoding = PositionalEncoding(d_model, max_seq_length)
@@ -607,7 +607,8 @@ class TransformerEncoder(nn.Module):
     
 
 class DecoderLayer(nn.Module):
-    def __init__(self, d_model, num_heads, d_ff, dropout):
+    def __init__(self, d_model: int, num_heads: int, d_ff: int, dropout: float) -> None:
+        super().__init__()
         self.self_attn = MultiHeadAttention(d_model, num_heads)
         self.cross_attn = MultiHeadAttention(d_model, num_heads)
         self.ff_sublayer = FeedForwardSubLayer(d_model, d_ff)
@@ -628,8 +629,33 @@ class DecoderLayer(nn.Module):
 
         return x
 
+
+class TransformerDecoder(nn.Module):
+    def __init__(self, vocab_size: int, d_model: int, num_layers: int, num_heads: int,
+                 d_ff: int, dropout: float, max_seq_length: int) -> None:
+        super().__init__()
+        self.embeddings = InputEmbeddings(vocab_size, d_model)
+        self.positional_encoding = PositionalEncoding(d_model, max_seq_length)
+        self.layers = nn.ModuleList(
+            [DecoderLayer(d_model, num_heads, d_ff, dropout) for _ in range(num_layers)]
+        )
+        self.fc = nn.Linear(d_model, vocab_size)
+        self.fc.weight = self.embeddings.embedding.weight # weight tying - share embeddings and output proj
+
+    def forward(self, x, encoder_output, tgt_mask, src_mask):
+        x = self.embeddings(x)
+        
+        x = self.positional_encoding(x)
+        
+        for layer in self.layers:
+            x = layer(x, encoder_output, tgt_mask, src_mask)
+        
+        x = self.fc(x)
+
+        return F.log_softmax(x, dim=-1)
+
 class ClassifierHead(nn.Module):
-    def __init__(self, d_model, num_classes):
+    def __init__(self, d_model: int, num_classes: int):
         super().__init__()
         self.fc = nn.Linear(d_model, num_classes)
 
@@ -638,7 +664,7 @@ class ClassifierHead(nn.Module):
         return F.log_softmax(logits, dim=-1)
     
 class RegressionHead(nn.Module):
-    def __init__(self, d_model, output_dim):
+    def __init__(self, d_model: int, output_dim: int):
         super().__init__()
         self.fc = nn.Linear(d_model, output_dim)
 
