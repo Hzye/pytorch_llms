@@ -4,7 +4,7 @@ from transformer import (
 import torch
 
 def main():
-    # Hyperparameters (from original paper)
+    # hyperparameters (from original paper)
     src_vocab_size = 10000  # English vocabulary
     tgt_vocab_size = 8000   # French vocabulary
     d_model = 512
@@ -14,33 +14,33 @@ def main():
     max_seq_length = 512
     dropout = 0.1
 
-    # Create model
+    # create model
     model = Transformer(
         src_vocab_size, tgt_vocab_size, d_model,
         num_heads, num_layers, d_ff, 
         max_seq_length, dropout
     )
 
-    # Sample inputs
+    # sample inputs
     batch_size = 2
-    src_seq_len = 10  # English sequence length
-    tgt_seq_len = 8   # French sequence length
+    src_seq_len = 10  # english sequence length
+    tgt_seq_len = 8   # french sequence length
 
-    # Source: English tokens
+    # source: english tokens
     src = torch.randint(0, src_vocab_size, (batch_size, src_seq_len))
 
-    # Target: French tokens (shifted right for training)
+    # target: french tokens (shifted right for training)
     tgt = torch.randint(0, tgt_vocab_size, (batch_size, tgt_seq_len))
 
-    # Masks
-    src_mask = (src != 0).unsqueeze(1).unsqueeze(1)  # Assume 0 is padding
+    # masks
+    src_mask = (src != 0).unsqueeze(1).unsqueeze(1)  # assume 0 is padding
 
-    # Causal mask for target
+    # causal mask for target
     causal_mask = torch.tril(torch.ones(tgt_seq_len, tgt_seq_len, dtype=torch.bool)).unsqueeze(0).unsqueeze(0)
     tgt_padding_mask = (tgt != 0).unsqueeze(1).unsqueeze(2)
     tgt_mask = causal_mask & tgt_padding_mask
 
-    # Forward pass
+    # forward pass
     output = model(src, tgt, src_mask, tgt_mask)
 
     print(f"Source shape:      {src.shape}")       # torch.Size([2, 10])
