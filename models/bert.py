@@ -388,3 +388,108 @@ class BertEncoderLayer(nn.Module):
         x = self.norm2(x + self.dropout(ff_output))
 
         return x
+
+
+class Pooler(nn.Module):
+    def __init__(self, d_model: int):
+        super().__init__()
+
+        self.linear = nn.Linear(d_model, d_model)
+        self.tanh = nn.Tanh()
+
+    def forward(self, x):
+        return self.tanh(self.linear(x))
+
+
+class BERT(nn.Module):
+    """
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                           BERT MODEL                                        │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │  Input: token_ids, segment_ids, attention_mask                              │
+    │                                                                             │
+    │         │                                                                   │
+    │         ▼                                                                   │
+    │  ┌─────────────────────────────────────┐                                    │
+    │  │        BertEmbeddings               │                                    │
+    │  │  token + position + segment         │                                    │
+    │  │  LayerNorm, Dropout                 │                                    │
+    │  └─────────────────────────────────────┘                                    │
+    │         │                                                                   │
+    │         ▼                                                                   │
+    │  ┌─────────────────────────────────────┐                                    │
+    │  │        BertEncoderLayer 1           │                                    │
+    │  │  Self-Attn → Add&Norm → FFN → Add&Norm │                                 │
+    │  └─────────────────────────────────────┘                                    │
+    │         │                                                                   │
+    │         ⋮ (repeated N times)                                                │
+    │         │                                                                   │
+    │         ▼                                                                   │
+    │  ┌─────────────────────────────────────┐                                    │
+    │  │        BertEncoderLayer N           │                                    │
+    │  └─────────────────────────────────────┘                                    │
+    │         │                                                                   │
+    │         ├──────────────────────┐                                            │
+    │         ▼                      ▼                                            │
+    │  sequence_output         pooled_output                                      │
+    │  (batch, seq, d_model)   (batch, d_model)                                   │
+    │                                  │                                          │
+    │                                  ▼                                          │
+    │                         ┌─────────────────┐                                 │
+    │                         │    Pooler       │                                 │
+    │                         │ Linear + Tanh   │                                 │
+    │                         │ [CLS] token     │                                 │
+    │                         └─────────────────┘                                 │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+    """
+    def __init__(self, vocab_size: int, d_model: int, num_layers: int, num_heads: int, 
+                 d_ff: int, max_seq_length: int, dropout: float = 0.1) -> None:
+        super().__init__()
+
+        self.embeddings = BertEmbeddings(vocab_size, d_model, max_seq_length, dropout)
+        self.layers = nn.ModuleList(
+            [BertEncoderLayer(d_model, num_heads, d_ff, dropout) for _ in range(num_layers)]
+        )
+
+        # pooler
+        self.pooler = Pooler(d_model)
+
+    def forward(self, token_ids, segment_ids, attention_mask):
+        x = self.embeddings(x, token_ids, segment_ids)
+        
+        # prep attention mask for mha
+        # attention_mask: (batch, seq_len) -> (batch, 1, 1, seq_len)
+        #
+        # full example:
+        # attention_mask: (batch, seq_len)
+        # Example: [[1, 1, 1, 1, 0, 0],   # batch 0: 4 real tokens, 2 padding
+        #           [1, 1, 1, 1, 1, 1]]   # batch 1: all real tokens
+
+        # After unsqueeze(1).unsqueeze(2):
+        # Shape: (batch, 1, 1, seq_len)
+        # Example: [[[[1, 1, 1, 1, 0, 0]]],
+        #           [[[1, 1, 1, 1, 1, 1]]]]
+
+        # This shape broadcasts correctly with attention scores:
+        # attention_scores: (batch, num_heads, seq_len, seq_len)
+        # extended_mask:    (batch, 1,          1,        seq_len)
+        # Broadcasting works across num_heads and query positions
+        if attention_mask is not None:
+            extended_mask = attention_mask.unsqueeze(1).unsqueeze(2)
+        else:
+            extended_mask = None
+
+        for layer in self.layers:
+            x = layer(x, extended_mask)
+
+        # (batch, seq_length, d_model)
+        x_sequence = x
+
+        # pool the [CLS] token (first position)
+        # used for classification tasks
+        x_pooled = x[:, 0, :]
+        x_pooled = self.pooler(x_pooled)
+
+        return x_sequence, x_pooled
