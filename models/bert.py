@@ -363,11 +363,16 @@ class FeedForwardSubLayer(nn.Module):
         super().__init__()
         self.fc1 = nn.Linear(d_model, d_ff)
         self.fc2 = nn.Linear(d_ff, d_model)
-        self.relu = nn.ReLU()
+        self.gelu = nn.GELU()
 
     def forward(self, x):
-        return self.fc2(self.relu(self.fc1(x)))
+        return self.fc2(self.gelu(self.fc1(x)))
     
 
 class BertEncoderLayer(nn.Module):
-    def __init__(self, d_mdel   )
+    def __init__(self, d_model: int, num_heads: int, d_ff: int, dropout: float = 0.1) -> None:
+        super().__init__()
+
+        self.self_attn = MultiHeadAttention(d_model, num_heads)
+
+        self.ff_sublayer
