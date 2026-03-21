@@ -1,0 +1,51 @@
+seed: 42
+
+# architecture
+model:
+  name: "transformer"
+  d_model: 256
+  num_heads: 8
+  num_layers: 4
+  d_ff: 512
+  max_seq_length: 128
+  dropout: 0.1
+
+# data
+data:
+  batch_size: 15
+  num_workers: 4
+  src_lang: "en"
+  tgt_lang: "de"
+  max_tokens: 128
+
+# training
+training:
+  epochs: 10
+  learning_rate: 1.0e-4
+  weight_decay: 0.01
+  warmup_steps: 4000
+  max_grad_norm: 1.0
+  gradient_accumulation_steps: 4 # 16 * 4 = 64
+
+# optimiser
+optimiser:
+  name: "adamw"
+  betas: [0.9, 0.98]
+  eps: 1.0e-9
+
+# scheduler
+scheduler:
+  name: "noam" # from paper
+  warmup_steps: 4000
+
+# logging
+logging:
+  log_every: 100
+  save_every: 1 # epochs
+  eval_every: 1 # epochs
+
+# paths
+paths:
+  checkpoint_dir: "checkpoints"
+  log_dir: "logs"
+  output_dir: "outputs"
