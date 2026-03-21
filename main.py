@@ -1,4 +1,4 @@
-from transformer import (
+from models.transformer import (
     Transformer
 )
 import torch
