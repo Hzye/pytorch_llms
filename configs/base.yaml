@@ -3,7 +3,7 @@ seed: 42
 # architecture
 model:
   name: "transformer"
-  d_model: 256
+  d_model: 512
   num_heads: 8
   num_layers: 4
   d_ff: 512
@@ -12,15 +12,15 @@ model:
 
 # data
 data:
-  batch_size: 15
+  batch_size: 32
   num_workers: 4
   src_lang: "en"
   tgt_lang: "de"
-  max_tokens: 128
+  max_tokens: 512
 
 # training
 training:
-  epochs: 10
+  epochs: 30
   learning_rate: 1.0e-4
   weight_decay: 0.01
   warmup_steps: 4000
