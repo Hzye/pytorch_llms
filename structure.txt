@@ -1,0 +1,57 @@
+pytorch_llms/
+├── configs/
+│   ├── base.yaml                    # Base configuration
+│   ├── transformer.yaml             # Transformer-specific config
+│   ├── bert.yaml                    # Future: BERT config
+│   └── gpt.yaml                     # Future: GPT config
+│
+├── data/
+│   ├── __init__.py
+│   ├── dataset.py                   # Dataset classes
+│   ├── tokeniser.py                 # Tokenisation utilities
+│   └── datamodule.py                # PyTorch Lightning-style data module
+│
+├── models/
+│   ├── __init__.py
+│   ├── transformer.py               # Your current implementation
+│   ├── bert.py                      # Future
+│   └── gpt.py                       # Future
+│
+├── training/
+│   ├── __init__.py
+│   ├── trainer.py                   # Training loop
+│   ├── optimiser.py                 # Optimiser & scheduler factory
+│   └── callbacks.py                 # Training callbacks
+│
+├── evaluation/
+│   ├── __init__.py
+│   ├── metrics.py                   # Metric computations
+│   └── evaluate.py                  # Evaluation scripts
+│
+├── inference/
+│   ├── __init__.py
+│   ├── generate.py                  # Text generation
+│   └── translate.py                 # Translation-specific
+│
+├── utils/
+│   ├── __init__.py
+│   ├── config.py                    # Configuration utilities
+│   ├── logging.py                   # Logging setup
+│   └── checkpoint.py                # Checkpoint utilities
+│
+├── scripts/
+│   ├── train.py                     # Training entry point
+│   ├── evaluate.py                  # Evaluation entry point
+│   └── inference.py                 # Inference entry point
+│
+├── tests/
+│   ├── test_model.py
+│   ├── test_data.py
+│   └── test_training.py
+│
+├── checkpoints/                     # Saved model weights
+├── logs/                            # Training logs
+├── outputs/                         # Outputs and artifacts
+│
+├── pyproject.toml                       
+└── README.md
