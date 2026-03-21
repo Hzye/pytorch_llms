@@ -1,0 +1,27 @@
+# CPU-runnable
+
+_base_: "base.yaml"
+
+model:
+  d_model: 64
+  num_heads: 4    # head_dim = 64/4 = 16
+  num_layers: 2
+  d_ff: 128
+  max_seq_length: 32
+  dropout: 0.0    # no dropout when debugging 
+
+data:
+  batch_size: 4
+  max_tokens: 32
+  num_workers: 0    # avoid multiprocessing overhead in tests
+
+training:
+  epochs: 3
+  warmup_steps: 100
+  gradient_accumulation_steps: 1
+
+scheduler:
+  warmup_steps: 100
+
+logging:
+  log_every: 10
