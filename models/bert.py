@@ -275,7 +275,7 @@ class BertEmbeddings(nn.Module):
         self.layer_norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, token_ids: torch.Tensor, segment_ids: torch.Tensor = None) -> torch.Tensor:
+    def forward(self, token_ids, segment_ids):
         batch_size, seq_length = token_ids.shape
         device = segment_ids.device
 
@@ -369,3 +369,5 @@ class FeedForwardSubLayer(nn.Module):
         return self.fc2(self.relu(self.fc1(x)))
     
 
+class BertEncoderLayer(nn.Module):
+    def __init__(self, d_mdel   )
