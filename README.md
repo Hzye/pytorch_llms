@@ -11,11 +11,11 @@ To deeply understand modern LLM architectures by building them component-by-comp
 | Architecture | Status | File |
 |--------------|--------|------|
 | **Transformer** (Vaswani et al., 2017) | ✅ Complete | `transformer.py` |
+| **BERT** (Devlin et al., 2018) | ✅ Complete | `bert.py` |
 
 ### Coming Soon
 
 - GPT (Decoder-only)
-- BERT (Encoder-only)
 - Mixture of Experts (MoE)
 
 ## Current Implementation: Transformer
