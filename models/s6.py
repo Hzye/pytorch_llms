@@ -195,3 +195,60 @@ class SelectiveSSMCore(nn.Module):
 
         y = torch.stack(outputs, dim=1)
         return y
+
+
+class S6Block(nn.Module):
+    def __ini__(self, d_model: int, state_dim: int):
+        super().__init__()
+        self.layer_norm = nn.LayerNorm(d_model)
+        self.ssm = SelectiveSSMCore(d_model, state_dim)
+
+    def forward(self, x):
+        return x + self.ssm(self.layer_norm(x))
+
+
+class TinyS6LM(nn.Module):
+    def __init__(self, vocab_size: int, d_model: int, state_dim: int, n_layers: int):
+        super().__init__()
+        self.vocab_size = vocab_size
+        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.layers = nn.ModuleList([
+            S6Block(d_model, state_dim) for _ in range(n_layers)
+        ])
+        self.layer_norm = nn.LayerNorm(d_model)
+        self.lm_head = nn.Linear(d_model, vocab_size, bias=False)
+
+        # weight tying
+        self.lm_head.weight = self.embedding.weight
+
+
+    def forward(self, tokens: torch.Tensor) -> torch.Tensor:
+        """
+        tokens: (batch, L) integer token ids
+        returns: logits (batch, L, vocab_size)
+        """
+        x = self.embedding(tokens) # (B, L, d_model)
+        for layer in self.layers:
+            x = layer(x) # (B, L, d_model)
+
+        x = self.layer_norm(x)
+        logits = self.lm_head(x) # (B, L, vocab_size)
+        return logits
+    
+
+    def loss(self, tokens: torch.Tensor) -> torch.Tensor:
+        """
+        Next-token prediction loss.
+        toeksn: (batch, L)
+        """
+        x = tokens[:, :-1]
+        targets = tokens[:, 1:]
+
+        logits = self.forward(x)
+
+        loss = F.cross_entropy(
+            logits.reshape(-1, self.vocab_size),
+            targets.reshape(-1)
+        )
+
+        return loss
