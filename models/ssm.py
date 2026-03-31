@@ -259,7 +259,9 @@ class VanillaSSM(nn.Module):
 
             outputs.append(y_t)
 
-        return torch.stack(outputs, dim=-1)
+        out = torch.stack(outputs, dim=1)
+        assert out.shape == (batch, L, d_model), f"expected {(batch, L, d_model)}, got {tuple(out.shape)}"
+        return out
     
     
     def forward(self, x: torch.Tensor, mode: str = "convolutional") -> torch.Tensor:
