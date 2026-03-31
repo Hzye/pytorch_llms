@@ -13,6 +13,8 @@ To deeply understand modern LLM architectures by building them component-by-comp
 | **Transformer** (Vaswani et al., 2017) | ✅ Complete | `transformer.py` |
 | **BERT** (Devlin et al., 2018) | ✅ Complete | `bert.py` |
 | **SSM** (Gu et al., 2021) | ✅ Complete | `ssm.py` |
+| **S4D** (Gu et al., 2021) | ✅ Complete | `s4d.py` |
+| **S6** (Gu et al., 2021) | ✅ Complete | `s6.py` |
 
 ### Coming Soon
 
