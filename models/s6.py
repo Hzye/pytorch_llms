@@ -198,7 +198,7 @@ class SelectiveSSMCore(nn.Module):
 
 
 class S6Block(nn.Module):
-    def __ini__(self, d_model: int, state_dim: int):
+    def __init__(self, d_model: int, state_dim: int):
         super().__init__()
         self.layer_norm = nn.LayerNorm(d_model)
         self.ssm = SelectiveSSMCore(d_model, state_dim)
